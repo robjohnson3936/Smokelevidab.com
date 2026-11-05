@@ -202,8 +202,6 @@ footer::before { content: ""; position: absolute; top: 0; left: 10%; right: 10%;
 .lines .total { border-top: 1px solid var(--gold); font-weight: 600; }
 .lines .total dd { color: var(--gold-hi); }
 .result { border: 1px solid rgba(210,154,76,.5); background: linear-gradient(160deg, var(--gold-soft), transparent 70%), #0d0b0a; padding: 20px; display: grid; gap: 14px; }
-.result .sent { font-size: 16px; color: var(--text); }
-#manualSend { display: grid; gap: 14px; }
 .result pre { margin: 0; white-space: pre-wrap; font: 400 13px/1.55 ui-monospace, Menlo, Consolas, monospace; color: var(--text); max-height: 260px; overflow: auto; user-select: all; }
 .result .row { display: flex; flex-wrap: wrap; gap: 10px; }
 .venmo { display: grid; gap: 12px; padding-top: 16px; border-top: 1px solid rgba(210,154,76,.35); }
@@ -427,20 +425,17 @@ footer::before { content: ""; position: absolute; top: 0; left: 10%; right: 10%;
 
           <label class="check"><input type="checkbox" id="age"> I am 21 or older.</label>
           <p class="err" id="err" hidden></p>
-          <div><button class="btn" type="submit" id="placeBtn">Place order</button></div>
+          <div><button class="btn" type="submit" id="placeBtn">Review my order</button></div>
 
           <div class="result" id="result" hidden>
-            <p class="sent" id="sentMsg" hidden><strong>Order received.</strong> Thanks! Your order was sent straight to us, and we'll email you to confirm shipping.</p>
-            <div id="manualSend">
             <p><strong>Step 1: Send us your order.</strong> Copy it and email it to <span style="user-select:all;color:var(--gold-hi)">smokelevidab@gmail.com</span> or text it to <span style="user-select:all;color:var(--gold-hi)">703-999-3936</span> so we know where to ship.</p>
             <pre id="orderText"></pre>
             <div class="row">
               <button class="btn" type="button" id="copyOrder">Copy order</button>
               <a class="btn ghost" id="mailOrder" href="#" target="_blank" rel="noopener">Open in email</a>
             </div>
-            </div>
             <div class="venmo" id="venmoRetail">
-              <p><strong><span id="payStep">Step 2: </span>Pay with Venmo.</strong> Open Venmo, search for our business profile and send your total. Put your name in the payment note so we can match it to your order.</p>
+              <p><strong>Step 2: Pay with Venmo.</strong> Open Venmo, search for our business profile and send your total. Put your name in the payment note so we can match it to your order.</p>
               <div class="venmo-card">
                 <div class="vm-row"><span class="k">Venmo</span><span class="v" id="vmName">Designs By Jelibean</span><button class="copy" type="button" data-copy="vmName">Copy</button></div>
                 <div class="vm-row"><span class="k">Amount</span><span class="v amt" id="vmAmt">$53.75</span><button class="copy" type="button" data-copy="vmAmt">Copy</button></div>
@@ -548,8 +543,6 @@ footer::before { content: ""; position: absolute; top: 0; left: 10%; right: 10%;
 <script>
 (function () {
   var PRICE = 50, TAX = 0.075, MIN_WHOLESALE = 20;
-  // Order emails: paste your Web3Forms access key between the quotes.
-  var WEB3FORMS_KEY = "70a6cf04-7d70-4021-96ed-35d90d354085";
   var mode = "retail";
   var $ = function (id) { return document.getElementById(id); };
   var qty = $("qty");
@@ -623,39 +616,12 @@ footer::before { content: ""; position: absolute; top: 0; left: 10%; right: 10%;
     ].filter(function (l) { return l !== null; }).join("\n");
     $("orderText").textContent = lines;
     $("mailOrder").href = "mailto:smokelevidab@gmail.com?subject=" + encodeURIComponent("LEVIDAB " + (w ? "wholesale order" : "order") + " – " + v("name")) + "&body=" + encodeURIComponent(lines);
-    function show(sent) {
-      $("sentMsg").hidden = !sent;
-      $("manualSend").hidden = sent;
-      $("payStep").textContent = sent ? "Next: " : "Step 2: ";
-      $("result").hidden = false;
-      $("result").scrollIntoView({ block: "nearest", behavior: "smooth" });
-    }
     $("venmoRetail").hidden = w;
     $("venmoWholesale").hidden = !w;
     $("vmAmt").textContent = money(n * PRICE * (1 + TAX));
-    $("vmNote").textContent = "LEVIDAB order \u2013 " + v("name");
-    if (!WEB3FORMS_KEY) { show(false); return; }
-    var btn = $("placeBtn");
-    btn.disabled = true; btn.textContent = "Sending\u2026";
-    fetch("https://api.web3forms.com/submit", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "Accept": "application/json" },
-      body: JSON.stringify({
-        access_key: WEB3FORMS_KEY,
-        subject: "New LEVIDAB " + (w ? "wholesale order" : "order") + " from " + v("name"),
-        from_name: "LEVIDAB website",
-        email: v("email"),
-        name: v("name"),
-        message: lines
-      })
-    }).then(function (r) {
-      if (!r.ok) throw new Error("status " + r.status);
-      show(true);
-    }).catch(function () {
-      err.textContent = "We couldn't send your order automatically. Please send it to us using the steps below.";
-      err.hidden = false;
-      show(false);
-    }).then(function () { btn.disabled = false; btn.textContent = "Place order"; });
+    $("vmNote").textContent = "LEVIDAB order – " + v("name");
+    $("result").hidden = false;
+    $("result").scrollIntoView({ block: "nearest", behavior: "smooth" });
   });
   $("copyOrder").addEventListener("click", function () {
     var btn = this, pre = $("orderText");
